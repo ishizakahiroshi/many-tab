@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Many Tab Session Isolator",
+  "description": "同一プロファイル・同一ウィンドウのまま、同じサイトの複数アカウントを別タブで同時にログイン状態に保つ（タブ単位 Cookie 分離）。100% ローカル。",
+  "version": "0.1.0",
+  "permissions": [
+    "declarativeNetRequestWithHostAccess",
+    "cookies",
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "optional_host_permissions": ["*://*/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Many Tab Session Isolator"
+  }
+}

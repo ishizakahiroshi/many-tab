@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Many Tab Session Isolator</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #0f1419;
+      --muted: #536471;
+      --border: #e1e8ed;
+      --accent: #1d9bf0;
+      --danger: #e0245e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      width: 340px;
+      margin: 0;
+      padding: 12px;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 13px;
+      color: var(--fg);
+      background: var(--bg);
+    }
+    h1 { font-size: 14px; margin: 0 0 10px; }
+    section {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    section > h2 {
+      font-size: 12px;
+      margin: 0 0 8px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    label { display: block; font-size: 11px; color: var(--muted); margin: 6px 0 2px; }
+    input, select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .row { display: flex; gap: 6px; align-items: center; }
+    .row > * { flex: 1; }
+    button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    button.secondary { background: #eff3f4; color: var(--fg); }
+    button.danger { background: transparent; color: var(--danger); padding: 2px 6px; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    ul { list-style: none; margin: 6px 0 0; padding: 0; }
+    li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 0;
+      border-top: 1px solid var(--border);
+    }
+    li:first-child { border-top: none; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+    .grow { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge { font-size: 10px; color: var(--muted); }
+    .empty { color: var(--muted); font-size: 11px; padding: 4px 0; }
+    .status {
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      margin-top: 8px;
+      display: none;
+    }
+    .status.show { display: block; }
+    .status.ok { background: #e8f5e9; color: #1b5e20; }
+    .status.err { background: #fdecea; color: #b71c1c; }
+    .tab-title { font-size: 12px; }
+    .tab-host { font-size: 11px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <h1>Many Tab Session Isolator</h1>
+
+  <!-- 1. ドメイン追加（実行時 host 権限取得） -->
+  <section>
+    <h2>1. 対象ドメインを追加</h2>
+    <div class="row">
+      <input id="domain-input" type="text" placeholder="例: x.com" />
+      <button id="domain-add" style="flex:0 0 auto;">許可して追加</button>
+    </div>
+    <ul id="domain-list"></ul>
+  </section>
+
+  <!-- 2. セッション取り込み -->
+  <section>
+    <h2>2. セッションを取り込む</h2>
+    <label for="capture-domain">ドメイン</label>
+    <select id="capture-domain"></select>
+    <label for="capture-name">セッション名</label>
+    <div class="row">
+      <input id="capture-name" type="text" placeholder="例: メイン垢" />
+      <button id="capture-btn" style="flex:0 0 auto;">取込</button>
+    </div>
+    <ul id="session-list"></ul>
+  </section>
+
+  <!-- 3. このタブに割り当て -->
+  <section>
+    <h2>3. このタブに割り当て</h2>
+    <div id="active-tab">
+      <div class="tab-title" id="tab-title">—</div>
+      <div class="tab-host" id="tab-host"></div>
+    </div>
+    <label for="assign-select">セッション</label>
+    <div class="row">
+      <select id="assign-select"></select>
+      <button id="assign-btn" style="flex:0 0 auto;">割当</button>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button id="unassign-btn" class="secondary">このタブの割り当てを解除</button>
+    </div>
+  </section>
+
+  <div id="status" class="status"></div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
