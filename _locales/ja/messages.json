@@ -1,0 +1,123 @@
+{
+  "appName": {
+    "message": "Many Tab Session Isolator",
+    "description": "Extension name (also shown in Web Store)"
+  },
+  "appDescription": {
+    "message": "自社開発 web アプリ・社内システム・マルチテナント SaaS の動作確認用に、タブ単位で別アカウントの Cookie / localStorage を分離する開発支援拡張。100% ローカル、外部送信なし。",
+    "description": "Extension description (also shown in Web Store, max 132 chars)"
+  },
+  "closeBtnLabel": { "message": "閉じる" },
+  "langAuto": { "message": "自動" },
+  "langSelectorTitle": { "message": "popup の言語" },
+
+  "section1Title": { "message": "1. 対象ドメインを追加" },
+  "domainInputPlaceholder": { "message": "例: nextcloud.example.com" },
+  "addDomainBtn": { "message": "許可して追加" },
+  "emptyDomainList": { "message": "まだドメインがありません" },
+
+  "section2Title": { "message": "2. セッションを取り込む" },
+  "section2Hint": {
+    "message": "取り込みは <strong>そのアカウントでログイン中の未割り当てタブ</strong> を開いた状態で実行。割り当て済みタブから取ると localStorage が空のセッションが出来てループの原因になります。",
+    "description": "HTML allowed (innerHTML)"
+  },
+  "labelDomain": { "message": "ドメイン" },
+  "labelSessionName": { "message": "セッション名" },
+  "sessionNamePlaceholder": { "message": "例: admin / tenant-a" },
+  "captureBtn": { "message": "取込" },
+  "emptySessionList": { "message": "まだセッションがありません" },
+  "deleteSessionBtn": { "message": "削除" },
+
+  "section3Title": { "message": "3. このタブに割り当て" },
+  "labelSession": { "message": "セッション" },
+  "assignBtn": { "message": "割当" },
+  "unassignBtn": { "message": "このタブの割り当てを解除" },
+  "tabTitleUnknown": { "message": "(無題)" },
+  "tabTitleError": { "message": "(アクティブタブを取得できません)" },
+  "tabHostAssigned": {
+    "message": "$HOST$　→ 割当中: $NAME$ (id:$ID$)",
+    "placeholders": {
+      "host": { "content": "$1" },
+      "name": { "content": "$2" },
+      "id":   { "content": "$3" }
+    }
+  },
+  "tabHostNormal": {
+    "message": "$HOST$ (id:$ID$)",
+    "placeholders": {
+      "host": { "content": "$1" },
+      "id":   { "content": "$2" }
+    }
+  },
+
+  "section4Title": { "message": "4. 緊急停止" },
+  "section4Hint": { "message": "reload loop など意図しない挙動になった場合の保険。全タブの割り当てと DNR ルールを撤去します。" },
+  "panicBtn": { "message": "全タブ割当解除（緊急停止）" },
+
+  "debugSummary": { "message": "デバッグ" },
+  "debugToggleLabel": { "message": "Debug log を有効化" },
+  "debugHint": {
+    "message": "ON にすると以降の動作ログが <code>chrome.storage.local.__mt_logs</code> に蓄積されます。ON / OFF 切替後は <strong>拡張をリロード</strong>してください（既存タブの content script に反映するため）。",
+    "description": "HTML allowed (innerHTML)"
+  },
+  "logsRefreshBtn": { "message": "ログ更新" },
+  "logsCopyBtn": { "message": "コピー" },
+  "logsClearBtn": { "message": "クリア" },
+  "dumpSessionsBtn": { "message": "セッション全部ログに出す" },
+
+  "errorInvalidDomain": { "message": "正しいドメインを入力してください（例: x.com）" },
+  "errorPermissionDenied": { "message": "権限が許可されませんでした" },
+  "successDomainAdded": {
+    "message": "$DOMAIN$ を追加しました",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "errorAddDomainFirst": { "message": "先にドメインを追加してください" },
+  "errorSessionNameRequired": { "message": "セッション名を入力してください" },
+  "successCaptured": {
+    "message": "「$NAME$」を取込（$COOKIE$ cookie / $LS$ localStorage）",
+    "placeholders": {
+      "name":   { "content": "$1" },
+      "cookie": { "content": "$2" },
+      "ls":     { "content": "$3" }
+    }
+  },
+  "errorNoActiveTab": { "message": "アクティブタブがありません" },
+  "errorNoSessionToAssign": { "message": "割り当てるセッションがありません" },
+  "errorPermissionMissing": { "message": "このドメインの権限が未付与です（手順1で追加してください）" },
+  "errorSessionNotFound": { "message": "セッションが見つかりません" },
+  "successAssigned": { "message": "割り当てました。ページを再読み込みすると反映されます" },
+  "successUnassigned": { "message": "割り当てを解除しました。ページを再読み込みしてください" },
+  "confirmPanic": { "message": "全タブの割り当てを解除し、DNR ルールを全撤去します。よろしいですか？" },
+  "successPanic": {
+    "message": "$COUNT$ タブ分の割り当てを解除しました。各タブをリロードしてください",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "successLogsCopied": {
+    "message": "ログをコピーしました（$CHARS$ 文字）",
+    "placeholders": { "chars": { "content": "$1" } }
+  },
+  "successLogsCopiedFallback": { "message": "ログをコピーしました" },
+  "successLogsCleared": { "message": "ログをクリアしました" },
+  "successDumpSessions": { "message": "セッション全部ログに出しました。「ログ更新」で表示" },
+  "successSessionDeleted": {
+    "message": "セッション「$NAME$」を削除しました",
+    "placeholders": { "name": { "content": "$1" } }
+  },
+  "debugEnableMsg": { "message": "Debug log を有効化しました。拡張をリロードすると全箇所に反映されます" },
+  "debugDisableMsg": { "message": "Debug log を無効化しました。次回以降のログ書き込みは停止します" },
+
+  "sessionMeta": {
+    "message": "$DOMAIN$・$COOKIE$ck/$LS$ls$WARN$",
+    "placeholders": {
+      "domain": { "content": "$1" },
+      "cookie": { "content": "$2" },
+      "ls":     { "content": "$3" },
+      "warn":   { "content": "$4" }
+    }
+  },
+  "lsLowWarning": { "message": "localStorage が少なすぎます。未割り当てタブから取り直してください（ループの原因になります）" },
+  "lsCountTooltip": {
+    "message": "$COUNT$ 件の localStorage キーを保持",
+    "placeholders": { "count": { "content": "$1" } }
+  }
+}

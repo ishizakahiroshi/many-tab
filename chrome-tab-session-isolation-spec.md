@@ -30,6 +30,33 @@
 - **100% ローカル / テレメトリなし / クラウド同期なし。** Cookie・セッションはブラウザ外に一切出さない。→ 信頼性と審査通過の両方のため。
 - 後述の最小権限設計は、"Cookie を読む拡張" が審査と install 時の信頼で詰まりやすい所を意図的に外すための選択。
 - ニッチユーティリティである前提（開発者/パワーユーザー向け、爆発的には伸びない）。**勝負どころは宣伝ではなく §6 のストレージ分離の作り込みの質。**
+- **対象は軽い SPA — Cookie + localStorage で認証・UI 状態が完結する web app**（自前 dev / 社内システム / マルチテナント SaaS / self-hosted など）。IndexedDB / Service Worker / cross-domain SSO / 反 multi-account 検知に強く依存するサービス（X / Google / 主要 SNS 等）はスコープ外（→ §3.5）。
+
+---
+
+## 3.5 動作対象 / 非対象
+
+ユーザー向けの対象/非対象一覧と代替推奨は README に集約してある（fresh public clone でユーザーが最初に読むため）。本 spec ではそれぞれが**技術的に**なぜそうなるかを補足する。
+
+### 対象（想定が成立する）
+
+- Cookie のみで認証する web app（社内システム・自前 dev サーバー・古めの管理画面など）
+- Cookie + localStorage で動く軽い SPA（マルチテナント SaaS の dev / QA、self-hosted の Nextcloud / Gitea / Vaultwarden 等）
+- 拡張がドメインを追加してから使うため、ユーザーが「対象である」と知ったうえで権限付与する形に閉じる
+
+### 非対象（本拡張の方式では分離できない）
+
+- **X / Google / 主要 SNS / 大手 SaaS:**
+  - IndexedDB に auth state / UI state を持つ（§4.4 が現状 localStorage しかカバーしていない）
+  - Service Worker が origin 単位で 1 個動き、SW 発の fetch は `tabId === -1` で DNR タブ条件を素通りする（§5）
+  - cross-domain SSO（accounts.google.com → mail.google.com 等）で複数オリジンに跨るため、ドメイン単位の Cookie 分離では足りない
+  - 反 fraud / 反 multi-account の検知が走り、Cookie / localStorage の組み合わせや fingerprint で異常を検知して強制ログアウト or 同 URL リロードループに陥る
+- **書き込み系の安定運用（投稿 / DM）:**
+  - CSRF トークン（X の `ct0` 等）が定期ローテーションする。閲覧は堅牢、書き込みは脆い（§5）。
+
+### 代替推奨
+
+ユーザー向けには README に列挙: Chrome プロファイル / Ghost Browser / Wavebox / ブラウザ使い分け。これらは fingerprint レベルで分離するため上記制約を回避できる。本拡張は「同一プロファイル内で軽く済ませたい」狭いユースケースを担当する。
 
 ---
 
@@ -57,12 +84,17 @@
 - 代わりに: セッション取得は**手動の一回取り込み**。普通にログインした状態で、`chrome.cookies` でそのドメインの現在の Cookie セットをスナップショットし、**名前付きセッション**として保存。
 - 以後はそのセッションの Cookie を DNR で注入するだけ。
 
-### 4.4 JS ストレージ層の分離（最大の難所 / MVP では後回し）
+### 4.4 JS ストレージ層の分離（v0.1.0 実装状況）
 - DNR はネットワーク層 = Cookie のみ。JS から触る `localStorage` / `sessionStorage` / `document.cookie` / `indexedDB` はネットワーク層では分離できない。
 - 必要: `document_start` で **MAIN ワールド（`world: "MAIN"`）** のコンテンツスクリプトを注入し、上記 API を monkeypatch して、キー / DB 名を**セッション単位で名前空間化**する。
   - MAIN ワールド必須の理由: 通常のコンテンツスクリプトは isolated world で動き、ページ自身のスクリプトが見る `document.cookie` / `localStorage` を上書きできない。
   - **タイミング勝負:** ページ自身のスクリプトより先に差し込む必要があり、重い SPA では難しい。
-- **品質の決定要因。** ここが崩れると "たまにアカウントが混ざる" 挙動になり、既存の低評価ツールと同じ轍を踏む。auth は Cookie で担保できても、localStorage 由来の UI 状態が混ざる。**安定性の唯一の勝負どころ。**
+- **v0.1.0 時点の実装:**
+  - `document.cookie` getter/setter — **実装済み**（MAIN world で hook、session 由来の Cookie を merge して返す。session キーへの set は overlay のみ更新、それ以外は native に流す）
+  - `localStorage` 一式（`getItem`/`setItem`/`removeItem`/`clear`/`key`/`length`）— **実装済み**（per-session overlay、書き込みは `chrome.storage.local` の `lsSnapshot` に永続化）
+  - `sessionStorage` — 未対応（タブ寿命と一致するため実害が少ないと判断、要件出てから）
+  - `indexedDB` — **未対応（将来課題）**。本拡張の方式で X / Google などが分離しきれない最大の理由。`IDBFactory.prototype.open` を hook して DB 名にセッションプレフィックスを付ける必要があり、ページ自身が`indexedDB.databases()` を確認するパターンや、既に開いた DB ハンドルを共有するパターンに弱い。
+- **品質の決定要因。** ここが崩れると "たまにアカウントが混ざる" 挙動になり、既存の低評価ツールと同じ轍を踏む。auth は Cookie で担保できても、localStorage / IndexedDB 由来の UI 状態が混ざる。**安定性の唯一の勝負どころ。**
 
 ---
 
@@ -75,17 +107,19 @@
 
 ## 6. MVP スコープ（最初に作る範囲）
 
-**やること:**
+**やること（v0.1.0 で達成済み）:**
 - popup からドメイン追加 → そのドメインの実行時 host 許可を取得（§4.1）。
 - 名前付きセッションの定義 + セッションごとの Cookie セット取り込み（§4.3）。
 - 各タブをセッションに割り当て（popup, ワンクリック） + 視覚表示（バッジ/色）。
-- Cookie 層分離のみ DNR タブ単位ルールで実装（§4.2）。
-- **達成基準:**「2タブに2アカウントのタイムラインが正しく並ぶ」を動作確認のゴールにする。
+- Cookie 層分離（DNR タブ単位ルール）と `document.cookie` / `localStorage` の per-session 仮想化（§4.2 / §4.4）。
+- reload loop 自動検知（同一 URL 3 秒以内 4 回でタブ割り当てを自動解除）。
+- **達成基準（v0.1.0）:** 「軽い SPA / 社内システム / マルチテナント SaaS の dev で 2 タブに 2 アカウントが並ぶ」。X / Google など重い SPA は **対象外**として扱う（→ §3.5 / §6.6）。
 
-**後回し:**
-- localStorage / IndexedDB の名前空間化（§4.4, MAIN ワールド monkeypatch）。当面は UI キャッシュの崩れを許容。
-- SW 発リクエスト（tabId=-1）の取りこぼし対応。
-- 投稿/DM の安定運用（`ct0` ローテーション対応）。
+**後回し（v0.1.0 では入れない）:**
+- `indexedDB` の名前空間化（§4.4, MAIN ワールド monkeypatch の拡張）。
+- SW 発リクエスト（`tabId === -1`）の取りこぼし対応。
+- 投稿/DM の安定運用（`ct0` 等の CSRF トークン ローテーション追跡）。
+- 反 multi-account 検知のある大手 SNS / SaaS（X / Google / Instagram / TikTok / Facebook / Slack / Discord / Notion / Figma / Linear など）への対応 — § 6.6 参照。
 - テスト済みサイト以外への汎用化の作り込み。
 
 **MVP+α:** 起動プロファイル / 端末別初期タブセットは「後回し（＝当面やらない）」ではなく、MVP 本体の直後に着手する補助機能として **§6.5** で別途定義する。
@@ -429,6 +463,40 @@ Chrome 拡張から Chrome 本体の起動時設定を勝手に変更しない�
 - 手動実行時のみ一時セッションで開く
 
 ただしこれらは MVP+α 初期では不要。まずは「端末ごとの URL セットを開く」「必要ならセッションを割り当てる」だけに絞る。
+
+---
+
+## 6.6 将来課題（v0.1.0 リリース時点で意図的に外したもの）
+
+§6 の「後回し」を粒度高くまとめ、それぞれ「やるとどう延伸するか」「先送り判断の根拠」を書く。Web Store 提出後の優先順位を考えるときの目安にする。
+
+### 6.6.1 `indexedDB` の per-session 仮想化
+
+- **影響:** これが入ると X / Google / Slack 等の「IndexedDB 経由で auth/UI state を持つ重い SPA」が分離対象に入る可能性が出る（ただし反 multi-account 検知や SW 連動が別の壁として残る）。
+- **手法案:** MAIN world で `IDBFactory.prototype.open` / `deleteDatabase` / `databases` を hook し、DB 名にセッション ID プレフィックスを付ける。`indexedDB.databases()` の戻り値からプレフィックスを剥がして見せる。
+- **既知の難所:**
+  - 既に open 済みの IDBDatabase ハンドルがページ scripts 間で共有されていると、後から prefix を切替えても以前のハンドルが残る。
+  - `databases()` を非標準フォールバックする実装（古い Safari など）に対する `version` 列挙の挙動が揺れる。
+  - DB の `version` upgrade 中（onupgradeneeded）にプレフィックス切替えがかかった場合の整合性。
+- **判定:** v0.1.0 では入れない。**反 multi-account 検知のあるサイトには結局通用しないため**、IDB だけ対応してもユーザー体験は大きく変わらない。狭いユースケース（IDB を持つ自前 SPA）で要望が出てから着手する。
+
+### 6.6.2 SW 発リクエスト（`tabId === -1`）の取りこぼし
+
+- **影響:** 各サイトの Service Worker がバックグラウンドで打つ fetch（push 受信、cache prefetch、analytics、API ポーリング）は DNR の `tabIds` 条件にマッチせず素通りする。サーバから見ると「最後に origin で auth した cookie jar の状態」で来るため、複数タブで別 user として並んでいる状態と矛盾する。
+- **対策案:** `chrome.declarativeNetRequest.updateSessionRules` で SW origin 全体に対するルールを足す案があるが、複数 user を同居させる際にどの session を選ぶかの仲裁が必要。
+- **判定:** v0.1.0 では入れない。本拡張の対象ドメイン（軽い SPA）では SW を使わない or 使っても auth に絡まないケースが多いと判断。
+
+### 6.6.3 CSRF トークン（`ct0` 等）ローテーション追跡
+
+- **影響:** 投稿 / DM などの書き込みでサーバが要求する CSRF トークンが、レスポンスの Set-Cookie で動的にローテーションする系（X が代表例）。**閲覧は堅牢、書き込みは間欠的に失敗**する。
+- **手法案:** `chrome.declarativeNetRequest.onRuleMatchedDebug` か `chrome.webRequest.onResponseStarted` で Set-Cookie を観測し、特定キーだけ session の cookie ジャーに反映する。
+- **判定:** v0.1.0 では入れない。そもそも本拡張は X / Google を対象外と明示しており、書き込み堅牢化は対応サイトを広げる文脈で考える話。
+
+### 6.6.4 反 multi-account 検知のある大手 SNS / SaaS への対応
+
+- **対象:** X / Google / Instagram / TikTok / Facebook / Slack / Discord / Notion / Figma / Linear など。
+- **理由:** 上記 §6.6.1 〜 §6.6.3 を全部やっても、fingerprint / SSO / 内部 health check により「同一プロファイル内の複数 session」を検知して強制ログアウト or 同 URL リロードループを誘発する設計が増えている。本拡張の方式（同一プロファイル内で per-tab に Cookie/storage を分離）では原理的に勝ち目が薄い。
+- **判定:** **対応しない**（v0.1.0 以降も含めて）。これらを必要とするユーザーには README で代替手段（Chrome プロファイル / Ghost Browser / Wavebox / ブラウザ使い分け）を推奨。
 
 ---
 

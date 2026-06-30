@@ -1,0 +1,123 @@
+{
+  "appName": {
+    "message": "Many Tab Session Isolator",
+    "description": "Extension name (also shown in Web Store)"
+  },
+  "appDescription": {
+    "message": "Developer tool that isolates per-tab cookies and localStorage to keep multiple accounts logged in simultaneously. 100% local.",
+    "description": "Extension description (also shown in Web Store, max 132 chars)"
+  },
+  "closeBtnLabel": { "message": "Close" },
+  "langAuto": { "message": "Auto" },
+  "langSelectorTitle": { "message": "Popup language" },
+
+  "section1Title": { "message": "1. Add target domain" },
+  "domainInputPlaceholder": { "message": "e.g. nextcloud.example.com" },
+  "addDomainBtn": { "message": "Grant & add" },
+  "emptyDomainList": { "message": "No domains yet" },
+
+  "section2Title": { "message": "2. Capture a session" },
+  "section2Hint": {
+    "message": "Run capture while <strong>a logged-in, unassigned tab</strong> is open. Capturing from an already-assigned tab yields an empty localStorage snapshot and can cause reload loops.",
+    "description": "HTML allowed (innerHTML)"
+  },
+  "labelDomain": { "message": "Domain" },
+  "labelSessionName": { "message": "Session name" },
+  "sessionNamePlaceholder": { "message": "e.g. admin / tenant-a" },
+  "captureBtn": { "message": "Capture" },
+  "emptySessionList": { "message": "No sessions yet" },
+  "deleteSessionBtn": { "message": "Delete" },
+
+  "section3Title": { "message": "3. Assign this tab" },
+  "labelSession": { "message": "Session" },
+  "assignBtn": { "message": "Assign" },
+  "unassignBtn": { "message": "Unassign this tab" },
+  "tabTitleUnknown": { "message": "(untitled)" },
+  "tabTitleError": { "message": "(cannot get active tab)" },
+  "tabHostAssigned": {
+    "message": "$HOST$ -> assigned: $NAME$ (id:$ID$)",
+    "placeholders": {
+      "host": { "content": "$1" },
+      "name": { "content": "$2" },
+      "id":   { "content": "$3" }
+    }
+  },
+  "tabHostNormal": {
+    "message": "$HOST$ (id:$ID$)",
+    "placeholders": {
+      "host": { "content": "$1" },
+      "id":   { "content": "$2" }
+    }
+  },
+
+  "section4Title": { "message": "4. Emergency stop" },
+  "section4Hint": { "message": "Safety switch for unexpected behavior such as reload loops. Removes all tab assignments and DNR rules." },
+  "panicBtn": { "message": "Unassign all tabs (emergency stop)" },
+
+  "debugSummary": { "message": "Debug" },
+  "debugToggleLabel": { "message": "Enable debug log" },
+  "debugHint": {
+    "message": "When ON, operation logs are accumulated in <code>chrome.storage.local.__mt_logs</code>. After toggling ON/OFF, please <strong>reload the extension</strong> so existing tab content scripts pick up the change.",
+    "description": "HTML allowed (innerHTML)"
+  },
+  "logsRefreshBtn": { "message": "Refresh logs" },
+  "logsCopyBtn": { "message": "Copy" },
+  "logsClearBtn": { "message": "Clear" },
+  "dumpSessionsBtn": { "message": "Dump all sessions to log" },
+
+  "errorInvalidDomain": { "message": "Please enter a valid domain (e.g. example.com)" },
+  "errorPermissionDenied": { "message": "Permission not granted" },
+  "successDomainAdded": {
+    "message": "Added $DOMAIN$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "errorAddDomainFirst": { "message": "Please add a domain first" },
+  "errorSessionNameRequired": { "message": "Please enter a session name" },
+  "successCaptured": {
+    "message": "Captured \"$NAME$\" ($COOKIE$ cookies / $LS$ localStorage keys)",
+    "placeholders": {
+      "name":   { "content": "$1" },
+      "cookie": { "content": "$2" },
+      "ls":     { "content": "$3" }
+    }
+  },
+  "errorNoActiveTab": { "message": "No active tab" },
+  "errorNoSessionToAssign": { "message": "No session to assign" },
+  "errorPermissionMissing": { "message": "Host permission missing for this domain (add it in step 1)" },
+  "errorSessionNotFound": { "message": "Session not found" },
+  "successAssigned": { "message": "Assigned. Reload the page to apply" },
+  "successUnassigned": { "message": "Unassigned. Please reload the page" },
+  "confirmPanic": { "message": "Unassign all tabs and remove all DNR rules. Are you sure?" },
+  "successPanic": {
+    "message": "Unassigned $COUNT$ tabs. Please reload each tab",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "successLogsCopied": {
+    "message": "Logs copied ($CHARS$ chars)",
+    "placeholders": { "chars": { "content": "$1" } }
+  },
+  "successLogsCopiedFallback": { "message": "Logs copied" },
+  "successLogsCleared": { "message": "Logs cleared" },
+  "successDumpSessions": { "message": "Dumped all sessions. Click \"Refresh logs\" to view" },
+  "successSessionDeleted": {
+    "message": "Deleted session \"$NAME$\"",
+    "placeholders": { "name": { "content": "$1" } }
+  },
+  "debugEnableMsg": { "message": "Debug log enabled. Reload the extension to apply everywhere" },
+  "debugDisableMsg": { "message": "Debug log disabled. Future log writes will stop" },
+
+  "sessionMeta": {
+    "message": "$DOMAIN$ - $COOKIE$ck/$LS$ls$WARN$",
+    "placeholders": {
+      "domain": { "content": "$1" },
+      "cookie": { "content": "$2" },
+      "ls":     { "content": "$3" },
+      "warn":   { "content": "$4" }
+    }
+  },
+  "lsLowWarning": { "message": "Too few localStorage keys. Please re-capture from an unassigned tab (otherwise reload loops can occur)" },
+  "lsCountTooltip": {
+    "message": "$COUNT$ localStorage keys stored",
+    "placeholders": { "count": { "content": "$1" } }
+  }
+}

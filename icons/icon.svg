@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>many-tab</title>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="85%">
+      <stop offset="0%" stop-color="#1f8a80"/>
+      <stop offset="100%" stop-color="#0a3a36"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="104" fill="url(#bg)"/>
+
+  <!-- 親タブ（上部中央・白）。ブラウザのタブを連想させる角丸長方形。 -->
+  <rect x="176" y="92" width="160" height="92" rx="22" fill="#f7f7f4"/>
+
+  <!-- Y 字分岐コネクタ（ゴールド）。親タブ → 横ライン → 2 つの子タブ。 -->
+  <g fill="none" stroke="#f4b400" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 256 196 L 256 256"/>
+    <path d="M 144 256 L 368 256"/>
+    <path d="M 144 256 L 144 316"/>
+    <path d="M 368 256 L 368 316"/>
+  </g>
+
+  <!-- 子タブ 2 つ（下部・白）。 -->
+  <rect x="60" y="328" width="168" height="104" rx="22" fill="#f7f7f4"/>
+  <rect x="284" y="328" width="168" height="104" rx="22" fill="#f7f7f4"/>
+</svg>
