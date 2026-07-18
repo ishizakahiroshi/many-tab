@@ -54,3 +54,6 @@ desktop.ini
 .idea/
 .vscode/
 *.swp
+
+# docsweep: backup snapshots (30-day retention, auto-cleanup)
+.docsweep/
