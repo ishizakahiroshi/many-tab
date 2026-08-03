@@ -1,3 +1,12 @@
+---
+type: bugfix
+status: watching
+tags: []
+owner: 
+review_status: draft
+related: []
+last_reviewed: 2026-07-04
+---
 # [様子見] content script デバッグ: context-invalidated と not-assigned
 
 > 最終更新: 2026-06-21(日) 22:30:58

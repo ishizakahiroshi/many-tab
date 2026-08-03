@@ -9,9 +9,7 @@
 - **本物の同時分離**: Cookie スワップ式（タブ切替時に Cookie を入れ替える）は採用しない。各タブが自分のセッションの Cookie を送り、複数アカウントが並行して生きる状態を作る。
 - **100% ローカル / テレメトリなし / クラウド同期なし**: Cookie・セッションはブラウザ外に一切出さない。
 - **最小権限**: install 時に広い `host_permissions` を要求せず、ユーザーが popup で追加したドメインだけ実行時に `chrome.permissions.request` で許可を取る。
-- **配布**: Chrome Web Store 公開予定（開発者登録済み）。
-
-> AI の個人グローバルルール（言語・確認・質問フォーマット・出力ルール・スクリーンショット規約等）は、各利用者の AI ツールのグローバル設定に置く。公開リポジトリ内の `CLAUDE.md` / `AGENTS.md` はプロジェクト固有ルールだけを扱う（fresh public clone で完結すること）。
+- **配布**: Chrome Web Store（v0.1.0 パッケージ・申請資材作成済み。掲載状況は README 参照）。
 
 ## 技術スタック
 
@@ -22,21 +20,27 @@
 | Cookie 改変 | `declarativeNetRequestWithHostAccess`（DNR session ルール） |
 | セッション保存 | `chrome.storage` |
 | Cookie 取得 | `chrome.cookies`（手動スナップショット） |
-| ストレージ名前空間化（将来） | `world: "MAIN"` コンテンツスクリプトで `localStorage` / `sessionStorage` / `document.cookie` / `indexedDB` を monkeypatch |
+| ストレージ名前空間化 | `world: "MAIN"` コンテンツスクリプト（`content-main.js`）で `document.cookie` / `localStorage` を per-session 仮想化（IndexedDB / Service Worker は対象外） |
 
-## ディレクトリ構成（叩き台 / 詳細は spec §7）
+## ディレクトリ構成（詳細は spec §7）
 
 ```
 /
-├─ manifest.json
-├─ background.js        # service worker: DNR ルール管理 / タブ↔セッション割り当て / permissions 同期
+├─ manifest.json           # __MSG_*__ で i18n 化（default_locale: ja）
+├─ background.js           # service worker: DNR ルール管理 / タブ↔セッション割り当て / permissions 同期
 ├─ popup.html
-├─ popup.js             # ドメイン追加 / セッション定義 / タブ割り当て UI
+├─ popup.js                # ドメイン追加 / セッション取込 / タブ割り当て UI（ja/en 切替）
+├─ content-main.js         # MAIN ワールド注入、document.cookie / localStorage 仮想化
+├─ content-isolated.js     # ISOLATED ワールド（MAIN との橋渡し）
 ├─ lib/
-│  ├─ sessions.js       # セッション(Cookie セット)の保存/取得 (chrome.storage)
-│  ├─ dnr.js            # tabId+domain 条件の session ルール生成/更新/撤去
-│  └─ cookies.js        # chrome.cookies スナップショット取り込み
-└─ (将来) content-main.js  # MAIN ワールド注入、localStorage/IndexedDB 名前空間化
+│  ├─ sessions.js          # セッション(Cookie セット)の保存/取得 (chrome.storage)
+│  ├─ dnr.js               # tabId+domain 条件の session ルール生成/更新/撤去
+│  ├─ cookies.js           # chrome.cookies スナップショット取り込み
+│  └─ logbuf.js            # デバッグ用リングバッファログ
+├─ _locales/{ja,en}/       # messages.json（popup 全文言）
+├─ icons/                  # 16/32/48/128 PNG + SVG マスター
+├─ scripts/                # validate-extension.ps1 / package-webstore.ps1
+└─ docs/                   # store 資材・release notes・bugfix 記録
 ```
 
 ## 設計上の制約（厳守）
@@ -55,22 +59,25 @@
 
 - DNR session/dynamic ルールでの `Cookie` リクエストヘッダ `set` の現行挙動（本当に置換され本物 Cookie が乗らないか）と `tabIds` 条件の指定方法。
 - `optional_host_permissions` + `permissions.request` の現行作法と、許可付与 → DNR ルールが効くまでの順序。
-- MAIN ワールドコンテンツスクリプト（`world: "MAIN"`）の登録方法と注入タイミング（§4.4 着手時）。
+- MAIN ワールドコンテンツスクリプト（`world: "MAIN"`）の登録方法と注入タイミング。
 
-## MVP スコープ（spec §6）
+## MVP スコープ（spec §6 / v0.1.0 で実装済み）
 
 - popup からドメイン追加 → 実行時 host 許可取得。
 - 名前付きセッション定義 + セッションごとの Cookie セット取り込み。
 - 各タブをセッションに割り当て（ワンクリック）+ 視覚表示（バッジ/色）。
-- Cookie 層分離のみ DNR タブ単位ルールで実装。
-- **達成基準**: 「2 タブに 2 アカウントのタイムラインが正しく並ぶ」。
+- Cookie 層の DNR タブ単位ルール分離 + `document.cookie` / `localStorage` の MAIN ワールド仮想化。
 
-**後回し**: localStorage / IndexedDB 名前空間化（MAIN ワールド）、SW 発リクエスト（tabId=-1）の取りこぼし、投稿/DM の安定運用（`ct0` ローテーション）、テスト済み以外への汎用化。
+**未対応（後回し）**: IndexedDB / Service Worker 経由の状態分離、SW 発リクエスト（tabId=-1）の取りこぼし、反 multi-account 検知を持つ大手 SNS/SaaS への対応（対象外一覧は README）。
 
-## 作業運用ルール（AI 共通）
+## AI 作業共通ルール
 
-- **拡張のロード・リロード・ブラウザ操作・動作確認はユーザーが行う**。AI からは提案・確認質問をしない（明示指示があった場合のみ実行）。完了報告ではコード変更の要約だけ伝える。
-- **ライセンス**: OSS として出す（`LICENSE` を明示）。
+ビルド・コミット禁止、secrets-scan 責務、plan/bugfix/pending md の作成ルール等の AI 作業共通ルールは、各利用者のグローバル AI 設定に従う（作者環境の例: `~/.claude/CLAUDE.md` および `~/.claude/guides/`）。公開リポジトリ内の `CLAUDE.md` / `AGENTS.md` にはプロジェクト固有ルールだけを置く。
+
+プロジェクト固有:
+
+- **拡張のロード・リロード・ブラウザ操作・動作確認はユーザーが行う**（AI は明示指示があった場合のみ実行）。
+- **ライセンス**: MIT（[LICENSE](LICENSE) 参照）。
 
 ## 参照リンク
 
