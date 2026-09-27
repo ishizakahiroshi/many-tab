@@ -57,3 +57,6 @@ desktop.ini
 
 # docsweep: backup snapshots (30-day retention, auto-cleanup)
 .docsweep/
+
+# Local video production files
+/brag-output/
