@@ -1,4 +1,11 @@
 ---
+cover:
+  path: portfolio/overview-2026-09-28.jpg
+  alt: {ja: "many-tab の紹介動画", en: "many-tab overview video"}
+video:
+  provider: youtube
+  id: "WtpQjOGZBh8"
+  durationSeconds: 20
 schemaVersion: 1
 color: "#e0664a"
 initials: "mt"
