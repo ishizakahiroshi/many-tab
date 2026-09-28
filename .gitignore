@@ -57,3 +57,27 @@ desktop.ini
 
 # docsweep: backup snapshots (30-day retention, auto-cleanup)
 .docsweep/
+# === obsidian-link: managed ===
+/docs/obsidian/
+# === /obsidian-link: managed ===
+
+# Local video source and renders
+/brag-output/
+
+# === project-init 推奨の追記（2026-09-28・templates/gitignore から不足分のみ） ===
+*.swo
+*.jsonl
+.commandcode/
+.cursor/
+opencode.json*
+.wrangler/
+.vercel/
+.netlify/
+.firebase/
+.turbo/
+.parcel-cache/
+.terraform/
+.serverless/
+**/supabase/.temp/
+!.env.example
+scripts/local/
