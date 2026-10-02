@@ -10,6 +10,8 @@
 import {
   snapshotDomain,
   buildCookieHeader,
+  buildPageCookieString,
+  urlMatchesDomain,
 } from "./lib/cookies.js";
 import {
   listDomains,
@@ -251,7 +253,7 @@ if (chrome.webNavigation) {
       'transitionQualifiers:', (d.transitionQualifiers || []).join(','),
       'url:', d.url?.slice(0, 100));
     // 割り当て済みなら boot データを即時注入（document_start に間に合わせるため）
-    await injectBootData(d.tabId, d.frameId);
+    await injectBootData(d.tabId, d.frameId, d.url);
     await trackNavigationForLoopDetection(d.tabId, d.url);
   });
   chrome.webNavigation.onBeforeNavigate.addListener(async (d) => {
@@ -263,13 +265,15 @@ if (chrome.webNavigation) {
 // 割り当て済みタブの新ドキュメントに boot データ（cookie ヘッダ + lsSnapshot）を
 // document_start でできるだけ早く plant する。content-main.js は window.__mt_boot /
 // __mt_boot_ls を sync 読みして hookLocalStorage を初期化する。
-async function injectBootData(tabId, frameId) {
+async function injectBootData(tabId, frameId, url) {
   const assignments = await listAssignments();
   const sessionId = assignments[tabId];
   if (!sessionId) return;
   const session = await getSession(sessionId);
   if (!session) return;
-  const cookies = buildCookieHeader(session.cookies);
+  // 割り当て先ドメイン以外のページには渡さない。
+  if (!urlMatchesDomain(url, session.domain)) return;
+  const cookies = buildPageCookieString(session.cookies);
   const lsSnapshot = session.lsSnapshot || {};
   try {
     await chrome.scripting.executeScript({
@@ -527,7 +531,8 @@ async function handleMessage(msg, sender) {
       if (!sessionId) return { ok: false, reason: 'not_assigned' };
       const session = await getSession(sessionId);
       if (!session) return { ok: false };
-      const cookies = buildCookieHeader(session.cookies);
+      if (!urlMatchesDomain(sender?.url, session.domain)) return { ok: false, reason: 'origin_mismatch' };
+      const cookies = buildPageCookieString(session.cookies);
       const lsSnapshot = session.lsSnapshot || {};
       await mtLog('MT-BG', 'returning cookies first60:', cookies.slice(0, 60),
         'lsKeys:', Object.keys(lsSnapshot).length);
@@ -541,6 +546,8 @@ async function handleMessage(msg, sender) {
       const assignments = await listAssignments();
       const sessionId = assignments[tabId];
       if (!sessionId) return { ok: false, reason: 'not_assigned' };
+      const lsSession = await getSession(sessionId);
+      if (!lsSession || !urlMatchesDomain(sender?.url, lsSession.domain)) return { ok: false, reason: 'origin_mismatch' };
       await applyLsOps(sessionId, msg.ops || []);
       return { ok: true };
     }
