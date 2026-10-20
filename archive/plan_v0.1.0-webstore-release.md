@@ -315,7 +315,7 @@ GitHub Issues: https://github.com/ishizakahiroshi/many-tab/issues
 - `icons/icon-128.png`
 - `icons/icon.svg` （マスター）
 
-`D:\dev\tools\svg-to-icons.ps1` で svg → 全 PNG 一括生成（make-icon 標準フロー）。
+`<DEV_ROOT>\tools\svg-to-icons.ps1` で svg → 全 PNG 一括生成（make-icon 標準フロー）。
 
 ### 注意
 
@@ -636,4 +636,4 @@ https://github.com/ishizakahiroshi/many-tab/blob/main/PRIVACY.md
 - 旧 `docs/local/release-zip-howto.md` と `docs/local/webstore-submission-fields.md` は削除（役割が新ファイル群に移ったため）
 - 残存する `docs/local/`: 本 plan / `screenshots-checklist.md`（実用 checklist）/ `webstore-post-submit-playbook.md`（reject 対応 playbook）
 
-次回以降のリリース手順は `chrome-webstore-publish` skill を `mode=release version=vX.Y.Z` で起動する。詳細は `D:/dev/workshop/skills/chrome-webstore-publish/SKILL.md` を参照。
+次回以降のリリース手順は `chrome-webstore-publish` skill を `mode=release version=vX.Y.Z` で起動する。詳細は `<DEV_ROOT>/workshop/skills/chrome-webstore-publish/SKILL.md` を参照。
